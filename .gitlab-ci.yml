@@ -1,0 +1,135 @@
+# Common parameters
+# ===========================================================================
+stages:
+  - lint
+  - build
+  - lint_deferred
+  - test
+  - deploy
+  - cleanup
+
+default:
+  tags:
+    - docker
+  artifacts:
+      expire_in: 5 minutes
+
+variables:
+      ALPINE_VERSION: "3.16"
+      BUILDTYPE: "release"
+      APP_NAME: $CI_PROJECT_NAME
+      PRODUCTION_IMAGE_TAG: "${APP_NAME}-${TARGET_ARCH}-alpine-${ALPINE_VERSION}"
+      BUILD_IMAGE_TAG: "${APP_NAME}-build-${TARGET_ARCH}-alpine-${ALPINE_VERSION}"
+
+# Lint
+# ===========================================================================
+shellscript_linting:
+  stage: lint
+  script:
+    - ./run_lint.sh -s
+  allow_failure: true
+
+dockerfile_linting:
+  stage: lint
+  script:
+    - ./run_lint.sh -d
+  allow_failure: true
+
+
+# Build
+# ===========================================================================
+.build:
+  stage: build
+  script:
+    - ./run_build.sh
+
+# Lint Deferred
+# ===========================================================================
+.clang_format:
+  stage: lint_deferred
+  script:
+    - ./run_lint.sh -f
+  allow_failure: true
+
+.clang_tidy:
+  stage: lint_deferred
+  script:
+    - ./run_lint.sh -t
+  allow_failure: true
+
+# Test
+# ===========================================================================
+.test:
+  stage: test
+  script:
+    - ./run_tests.sh
+
+# Deploy
+# ===========================================================================
+.deploy:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+(\.\d+){2,}(-rc\d+)?$/
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker tag "$PRODUCTION_IMAGE_TAG" "${CI_REGISTRY_IMAGE}/${TARGET_ARCH}/alpine-${ALPINE_VERSION}:${CI_COMMIT_TAG}"
+    - docker push "${CI_REGISTRY_IMAGE}/${TARGET_ARCH}/alpine-${ALPINE_VERSION}:${CI_COMMIT_TAG}"
+    - docker logout
+
+# Cleanup
+# ===========================================================================
+.cleanup:
+  stage: cleanup
+  when: always
+  script:
+    - |
+      cleanup_docker_image()
+      {
+        if docker inspect --type image "${1}" 1> /dev/null; then
+          docker rmi "${1}"
+        fi
+      }
+    - cleanup_docker_image "$BUILD_IMAGE_TAG"
+    - cleanup_docker_image "$PRODUCTION_IMAGE_TAG"
+    - docker image prune -f > /dev/null # remove any docker image leftover
+
+# Multi-arch jobs
+# # Arch: arm64v8/aarch
+# # ===========================================================================
+.arm64v8 :
+  variables:
+      TARGET_ARCH: "arm64v8"
+
+build_arm64v8:
+  extends: 
+    - .arm64v8 
+    - .build
+
+clang_format_arm64v8:
+  extends:
+    - .arm64v8
+    - .clang_format
+  needs: ["build_arm64v8"]
+
+clang_tidy_arm64v8:
+  extends:
+    - .arm64v8
+    - .clang_tidy
+  needs: ["build_arm64v8"]
+
+test_arm64v8:
+  extends: 
+    - .arm64v8 
+    - .test
+  needs: ["build_arm64v8"]
+
+deploy_arm64v8:
+  extends:
+    - .arm64v8
+    - .deploy
+  needs: ["test_arm64v8"]
+
+cleanup_arm64v8:
+  extends:
+    - .arm64v8
+    - .cleanup
