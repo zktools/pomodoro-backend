@@ -47,6 +47,7 @@ main()
 	docker run \
 			-it \
 			--rm \
+			-p 18080:18080 \
 			"$IMAGE_TAG" \
 			"${@}"
 

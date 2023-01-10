@@ -22,8 +22,10 @@ WORKDIR /${APP_NAME}
 # hadolint ignore=DL3018
 RUN \
     apk add --no-cache \
+        boost-dev \
         clang-extra-tools \
         g++ \
+        git \
         gtest \
         gtest-dev \
         meson \
@@ -46,6 +48,7 @@ COPY .clang-format ./
 FROM runtime-dependencies AS production
 ARG APP_NAME
 ARG BUILDDIR
+EXPOSE 18080
 COPY --from=build /${APP_NAME}/${BUILDDIR}/src/pomodoro-backend /usr/bin/
 COPY ./dockerfiles/docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]

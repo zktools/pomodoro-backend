@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/CrowCpp/Crow.git
+revision = v1.0+5
+patch_directory = crow
+
+[provide]
+crow=crow_dep
