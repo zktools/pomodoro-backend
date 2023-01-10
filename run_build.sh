@@ -34,10 +34,11 @@ build() {
 			-t "${build_image_tag}" \
 			"./"
 
-	# Only copy build artifacts to local development environment
+	# Only copy build artifacts and subprojects to local development environment
 	if [ -z "${CI}" ]; then
 		build_container=$(docker run -it -d "${build_image_tag}")
 		docker cp "${build_container}:/${APP_NAME}/${BUILDDIR}" ./
+		docker cp "${build_container}:/${APP_NAME}/subprojects" ./
 		docker rm -f "$build_container" > /dev/null
 	fi
 }
