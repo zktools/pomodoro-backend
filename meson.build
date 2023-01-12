@@ -8,10 +8,11 @@ project(
 
 project_flags = [ ]
 
-# project specific flags
+# Crow project specific flags
+# TODO : Find a way to only disable flag below for the CROW project
 project_flags += [
-    # Crow expose virtual destructors
     '-Wno-non-virtual-dtor',
+    '-Wno-address',
 ]
 
 cxx = meson.get_compiler('cpp')

@@ -15,7 +15,7 @@ default:
       expire_in: 5 minutes
 
 variables:
-      ALPINE_VERSION: "3.16"
+      ALPINE_VERSION: "3.17"
       BUILDTYPE: "release"
       APP_NAME: $CI_PROJECT_NAME
       PRODUCTION_IMAGE_TAG: "${APP_NAME}-${TARGET_ARCH}-alpine-${ALPINE_VERSION}"
@@ -101,8 +101,8 @@ dockerfile_linting:
       TARGET_ARCH: "arm64v8"
 
 build_arm64v8:
-  extends: 
-    - .arm64v8 
+  extends:
+    - .arm64v8
     - .build
 
 clang_format_arm64v8:
@@ -118,8 +118,8 @@ clang_tidy_arm64v8:
   needs: ["build_arm64v8"]
 
 test_arm64v8:
-  extends: 
-    - .arm64v8 
+  extends:
+    - .arm64v8
     - .test
   needs: ["build_arm64v8"]
 
