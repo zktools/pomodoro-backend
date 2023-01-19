@@ -1,10 +1,10 @@
+#include <SQLiteCpp/SQLiteCpp.h>
 #include <crow.h>
 
+#include <cxxopts.hpp>
 #include <iostream>
 
 int main() {
-  std::cout << "Starting Pomodoro Backend ..." << std::endl;
-
   crow::SimpleApp app;
 
   CROW_ROUTE(app, "/")([]() { return "Hello world"; });

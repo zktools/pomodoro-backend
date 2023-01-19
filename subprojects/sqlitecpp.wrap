@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/SRombauts/SQLiteCpp/
+revision = 3.2.0
+depth = 1
+
+[provide]
+sqlitecpp = sqlitecpp_dep

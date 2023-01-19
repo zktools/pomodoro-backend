@@ -11,15 +11,14 @@ ARG SHELL_SCRIPTS
 COPY "${SHELL_SCRIPTS}" ./
 
 FROM index.docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION} AS runtime-dependencies
-# hadolint ignore=DL3018
 RUN \
     apk add --no-cache \
-        libstdc++
+        libstdc++ \
+        sqlite-libs
 
 FROM runtime-dependencies AS builder
 ARG APP_NAME
 WORKDIR /${APP_NAME}
-# hadolint ignore=DL3018
 RUN \
     apk add --no-cache \
         boost-dev \
@@ -29,6 +28,7 @@ RUN \
         gtest \
         gtest-dev \
         meson \
+        sqlite-dev \
         valgrind
 
 FROM builder AS build
@@ -49,7 +49,10 @@ FROM runtime-dependencies AS production
 ARG APP_NAME
 ARG BUILDDIR
 EXPOSE 18080
+# Install libsqlitecpp
+COPY --from=build /${APP_NAME}/${BUILDDIR}/subprojects/sqlitecpp/libsqlitecpp.so /usr/local/lib
+COPY --from=build /${APP_NAME}/${BUILDDIR}/subprojects/sqlitecpp/libsqlitecpp.so.0 /usr/local/lib
+# Install application
 COPY --from=build /${APP_NAME}/${BUILDDIR}/src/pomodoro-backend /usr/bin/
-COPY ./dockerfiles/docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["pomodoro-backend"]
+ENTRYPOINT ["pomodoro-backend"]
+CMD ["-h"]

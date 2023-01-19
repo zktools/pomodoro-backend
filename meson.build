@@ -5,7 +5,6 @@ project(
     default_options: ['warning_level=3', 'werror=true', 'cpp_std=c++17', 'optimization=g'],
 )
 
-
 project_flags = [ ]
 
 # Crow project specific flags
